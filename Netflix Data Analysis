@@ -1,0 +1,141 @@
+# 1. Import Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set(style="whitegrid")
+plt.rcParams['figure.dpi'] = 120
+
+# 2. Load Dataset
+data = pd.read_csv('E:/Unified Mentor/Project 3/Netflix/netflix1.csv')
+print("Initial Data:\n", data.head())
+
+# 3. Data Cleaning
+data.drop_duplicates(inplace=True)
+data.dropna(subset=['director','duration', 'country'], inplace=True)
+data['date_added'] = pd.to_datetime(data['date_added'], errors='coerce')
+data = data[~data['date_added'].isnull()]
+print("\nCleaned Data Types:\n", data.dtypes)
+
+
+# 4. Feature Engineering
+data['year'] = data['date_added'].dt.year
+data['month'] = data['date_added'].dt.month
+data['day'] = data['date_added'].dt.day
+data['genres'] = data['listed_in'].str.split(', ')
+
+# 5. EDA Visuals
+
+## 5.1 Content Type Distribution
+plt.figure(figsize=(8, 5))
+sns.countplot(x='type', data=data, palette='Set2')
+plt.title('Content Type Distribution')
+plt.xlabel('Type')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.savefig('Content Type Distribution')
+plt.show()
+plt.close()
+
+## 5.2 Ratings Distribution
+ratings = data['rating'].value_counts().reset_index()
+ratings.columns = ['Rating', 'Count']
+plt.figure(figsize=(10, 5))
+sns.barplot(x='Rating', y='Count', data=ratings, palette='muted')
+plt.xticks(rotation=45)
+plt.title('Rating Distribution on Netflix')
+plt.tight_layout()
+plt.savefig('Rating Distribution on Netflix')
+plt.show()
+plt.close()
+
+## 5.3 Pie Chart: Content Share
+plt.figure(figsize=(6, 6))
+data['type'].value_counts().plot.pie(autopct='%1.0f%%', colors=['#66b3ff', '#99ff99'], labels=['Movies', 'TV Shows'])
+plt.title('Share of Movies and TV Shows')
+plt.ylabel('')
+plt.tight_layout()
+plt.savefig('Share of Movies and TV Shows')
+plt.show()
+plt.close()
+
+## 5.4 Most Common Genres
+genre_counts = data['genres'].explode().value_counts().head(10)
+plt.figure(figsize=(10, 5))
+sns.barplot(x=genre_counts.values, y=genre_counts.index, palette='Set3')
+plt.title('Top 10 Genres')
+plt.xlabel('Count')
+plt.ylabel('Genres')
+plt.tight_layout()
+plt.savefig('Top 10 Genres')
+plt.show()
+plt.close()
+
+## 5.5 Yearly Releases
+yearly_movies = data[data['type'] == 'Movie']['year'].value_counts().sort_index()
+yearly_shows = data[data['type'] == 'TV Show']['year'].value_counts().sort_index()
+plt.figure(figsize=(12, 5))
+plt.plot(yearly_movies.index, yearly_movies.values, label='Movies')
+plt.plot(yearly_shows.index, yearly_shows.values, label='TV Shows')
+plt.title('Yearly Releases')
+plt.xlabel('Year')
+plt.ylabel('Count')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('Yearly Releases')
+plt.show()
+plt.close()
+
+## 5.6 Monthly Releases
+monthly_movies = data[data['type'] == 'Movie']['month'].value_counts().sort_index()
+monthly_shows = data[data['type'] == 'TV Show']['month'].value_counts().sort_index()
+plt.figure(figsize=(10, 5))
+plt.plot(monthly_movies.index, monthly_movies.values, label='Movies')
+plt.plot(monthly_shows.index, monthly_shows.values, label='TV Shows')
+plt.title('Monthly Releases')
+plt.xlabel('Month')
+plt.ylabel('Count')
+plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('Monthly Releases')
+plt.show()
+plt.close()
+
+## 5.7 Top 10 Countries with Most Content
+
+# Clean up 'Not Given' and blank country names
+valid_countries = data[(data['country'].str.strip() != "") & 
+                       (data['country'].str.lower() != 'not given')]
+
+top_countries = valid_countries['country'].value_counts().head(15)
+plt.figure(figsize=(10, 5))
+sns.barplot(x=top_countries.values, y=top_countries.index, palette='coolwarm')
+plt.title('Top 10 Countries by Content')
+plt.xlabel('Count')
+plt.ylabel('Country')
+plt.tight_layout()
+plt.savefig('Top 10 Countries by Content')
+plt.show()
+plt.close()
+
+## 5.8 Top 10 Directors
+
+# Clean up 'Not Given' and blank director names
+valid_directors = data[(data['director'].str.strip() != "") & 
+                       (data['director'].str.lower() != 'not given')]
+
+top_directors = valid_directors['director'].value_counts().head(10)
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_directors.values, y=top_directors.index, palette='Blues_d')
+plt.title('Top 10 Directors')
+plt.xlabel('Number of Titles')
+plt.ylabel('Director')
+plt.tight_layout()
+plt.savefig('Top 10 Directors')
+plt.show()
+plt.close()
